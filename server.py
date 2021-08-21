@@ -180,8 +180,14 @@ class RequestHandler(BaseHTTPRequestHandler):
             return
 
         self.log_message(f"Fetching HEAD for: {dest_url}")
+
+        headers = {}
+        user_agent = self.headers.get("user-agent", "").strip()
+        if user_agent:
+            headers["User-Agent"] = user_agent
+
         try:
-            remote_response = requests.head(dest_url, timeout=10)
+            remote_response = requests.head(dest_url, timeout=10, headers=headers)
         except requests.Timeout as exc:
             self.log_error(f"Remote fetch head timeout: {exc}")
             self.send_response(HTTPStatus.GATEWAY_TIMEOUT)
@@ -229,10 +235,15 @@ class RequestHandler(BaseHTTPRequestHandler):
             # Start downloading the file.
             self.log_message(f"Fetching GET for: {dest_url}")
 
+            headers = {}
+            user_agent = self.headers.get("user-agent", "").strip()
+            if user_agent:
+                headers["User-Agent"] = user_agent
+
             remote_response = None
             remote_response_err = False
             try:
-                remote_response = requests.get(dest_url, stream=True, timeout=10)
+                remote_response = requests.get(dest_url, stream=True, timeout=10, headers=headers)
             except requests.Timeout as exc:
                 self.log_error(f"Remote fetch get timeout: {exc}")
                 self.send_response(HTTPStatus.GATEWAY_TIMEOUT)
