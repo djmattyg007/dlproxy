@@ -21,8 +21,18 @@ python3 server.py
 
 ## Usage
 
+To download the contents of the URL `https://www.matthewgamble.net/`, you could use this `wget`
+command line:
+
 ```
 wget -O index.html http://127.0.0.1:9090/https://www.matthewgamble.net/
+```
+
+The full URL that you want to cache should be passed as the path to the proxy server. For example,
+you could download the Arch Linux logo like so:
+
+```
+wget http://127.0.0.1:9090/https://archlinux.org/static/logos/archlinux-logo-dark-90dpi.ebdee92a15b3.png
 ```
 
 ## Notes
