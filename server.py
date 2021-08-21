@@ -1,3 +1,18 @@
+# dlproxy: A HTTP caching proxy
+# Copyright (C) 2021 Matthew Gamble <git@matthewgamble.net>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 from hashlib import sha256
 from http import HTTPStatus
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
@@ -7,11 +22,22 @@ from pathlib import Path
 import sqlite3
 from threading import Lock
 import socket
+import sys
 import time
 from uuid import uuid4
 import weakref
 
 import requests
+
+
+if sys.stdout.isatty():
+    print((
+        "dlproxy Copyright (C) 2021 Matthew Gamble <git@matthewgamble.net>\n"
+        "This program comes with ABSOLUTELY NO WARRANTY.\n"
+        "This is free software, you can redistribute it and/or modify\n"
+        "it under the terms of the GNU General Public License as published by\n"
+        "the Free Software Foundation, version 3 of the License.\n"
+    ))
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -21,10 +47,13 @@ logger = logging.getLogger()
 SCHEMA_VERSION = 1
 ROOTDIR = Path(__file__).parent
 
-if os.environ.get("DLPROXY_STORAGE"):
-    STORAGEDIR = Path(os.environ.get("DLPROXY_STORAGE"))
+env_storage = os.environ.get("DLPROXY_STORAGE")
+if env_storage:
+    STORAGEDIR = Path(env_storage)
 else:
     STORAGEDIR = Path(__file__).parent / "storage"
+if not STORAGEDIR.exists():
+    raise RuntimeError(f"Storage directory does not exist: {STORAGEDIR}")
 
 logger.info(f"Using storage path: {STORAGEDIR}")
 
@@ -476,7 +505,12 @@ class RequestHandler(BaseHTTPRequestHandler):
                 no_chunk_available_count = 0
 
 
-with ThreadingHTTPServer(("localhost", 9090), RequestHandler) as httpd:
+try:
+    port = int(os.environ.get("DLPROXY_PORT", 9090))
+except ValueError:
+    port = 9090
+
+with ThreadingHTTPServer((os.environ.get("DLPROXY_HOST", "127.0.0.1"), port), RequestHandler) as httpd:
     host, port = httpd.socket.getsockname()[:2]
     url_host = f"[{host}]" if ":" in host else host
     print(
