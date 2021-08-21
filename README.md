@@ -3,7 +3,7 @@
 ## Requirements
 
 - Python 3 with SQLite support
-- A reasonably up-to-date version of requests (as of August 2021)
+- A reasonably up-to-date version of the `requests` library (as of August 2021)
 
 ## Running the server
 
