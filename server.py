@@ -1,4 +1,4 @@
-from base64 import urlsafe_b64encode
+from hashlib import sha256
 from http import HTTPStatus
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import logging
@@ -21,11 +21,10 @@ SCHEMA_VERSION = 1
 ROOTDIR = Path(__file__).parent
 
 
-def base64(raw_string: str) -> str:
-    bstring = raw_string.encode()
-    b64string = urlsafe_b64encode(bstring)
-    output = b64string.decode("ascii")
-    return output
+def hashgen(raw_string: str) -> str:
+    hash = sha256()
+    hash.update(raw_string.encode())
+    return hash.hexdigest()
 
 
 def check_lock(lock: Lock) -> bool:
@@ -157,7 +156,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def do_HEAD(self):
         dest_url = self.dest_url
-        file_id = base64(dest_url)
+        file_id = hashgen(dest_url)
 
         db_file = self.fetch_db_file(file_id)
 
@@ -204,7 +203,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         dest_url = self.dest_url
-        file_id = base64(dest_url)
+        file_id = hashgen(dest_url)
 
         db_file = self.fetch_db_file(file_id)
         lock = start_locks.setdefault(file_id, Lock())
