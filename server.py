@@ -359,7 +359,6 @@ class RequestHandler(BaseHTTPRequestHandler):
                 response_len += len(chunk)
                 disk_file.write(chunk)
                 self.wfile.write(chunk)
-                time.sleep(0.05)
             # Disconnect the client now, we can keep working without them.
             self.finish()
 
