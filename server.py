@@ -96,6 +96,7 @@ start_locks = weakref.WeakValueDictionary()
 
 class RequestHandler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
+    default_request_version = "HTTP/1.1"
 
     def __init__(self, *args, **kwargs):
         self.log_trace = str(uuid4())
@@ -250,9 +251,10 @@ class RequestHandler(BaseHTTPRequestHandler):
                 remote_response_err = True
 
             if not remote_response:
-                self.log_error("Remote fetch logic error")
-                self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
-                remote_response_err = True
+                if not remote_response_err:
+                    self.log_error("Remote fetch logic error")
+                    self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
+                    remote_response_err = True
             elif remote_response.status_code != 200:
                 self.send_response(remote_response.status_code)
                 remote_response_err = True
