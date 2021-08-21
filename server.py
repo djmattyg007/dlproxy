@@ -2,6 +2,7 @@ from hashlib import sha256
 from http import HTTPStatus
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import logging
+import os
 from pathlib import Path
 import sqlite3
 from threading import Lock
@@ -19,6 +20,13 @@ logger = logging.getLogger()
 
 SCHEMA_VERSION = 1
 ROOTDIR = Path(__file__).parent
+
+if os.environ.get("DLPROXY_STORAGE"):
+    STORAGEDIR = Path(os.environ.get("DLPROXY_STORAGE"))
+else:
+    STORAGEDIR = Path(__file__).parent / "storage"
+
+logger.info(f"Using storage path: {STORAGEDIR}")
 
 
 def hashgen(raw_string: str) -> str:
@@ -54,7 +62,7 @@ class Connection(sqlite3.Connection):
 
 
 db = sqlite3.connect(
-    ROOTDIR / "storage" / "storage.db",
+    STORAGEDIR / "storage.db",
     timeout=5,
     factory=Connection,
     check_same_thread=False,
@@ -254,7 +262,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 lock.release()
                 return
 
-            disk_file_path = ROOTDIR / "storage" / file_id
+            disk_file_path = STORAGEDIR / file_id
             try:
                 disk_file = disk_file_path.open(mode="xb", buffering=0)
             except BaseException as exc:
@@ -373,7 +381,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.log_message(f"Starting DB file download for: {db_file['url']}")
 
         file_id = db_file["file_id"]
-        disk_file_path = ROOTDIR / "storage" / file_id
+        disk_file_path = STORAGEDIR / file_id
         if db_file["content_length"] == "unknown":
             expected_content_length = -1
         else:
