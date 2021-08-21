@@ -370,7 +370,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             return
 
     def send_db_file(self, db_file: dict, lock: Lock):
-        self.log_message(f"Starting DB file download for: {db_file['dest_url']}")
+        self.log_message(f"Starting DB file download for: {db_file['url']}")
 
         file_id = db_file["file_id"]
         disk_file_path = ROOTDIR / "storage" / file_id
