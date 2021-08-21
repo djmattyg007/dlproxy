@@ -256,6 +256,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         if db_file:
             # Start returning the response.
             self.log_message(f"Found DB file for: {dest_url}")
+            # TODO: Consider this:
+            # Check to see if db_file["finished"] == false AND lock not acquired.
+            # If that's the case, we should probably return a HTTP 500 immediately.
             self.send_db_file(db_file, lock)
             return
 
