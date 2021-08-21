@@ -485,7 +485,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 fresh_db_file = self.fetch_db_file(file_id)
                 if not fresh_db_file:
                     # Something has gone horribly wrong.
-                    self.log_message("Fresh db file not found.")
+                    self.log_error("Fresh DB file not found.")
                     break
 
                 if fresh_db_file["finished"] == True:
