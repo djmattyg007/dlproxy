@@ -393,6 +393,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header("Content-type", db_file["content_type"])
         if expected_content_length > 0:
             self.send_header("Content-length", str(expected_content_length))
+        self.end_headers()
 
         found_content_length = 0
         no_chunk_available_count = 0
