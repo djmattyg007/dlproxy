@@ -261,7 +261,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
                 remote_response_err = True
 
-            if not remote_response:
+            if remote_response is None:
                 if not remote_response_err:
                     self.log_error("Remote fetch logic error")
                     self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
