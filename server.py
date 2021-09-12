@@ -507,21 +507,56 @@ class RequestHandler(BaseHTTPRequestHandler):
                 no_chunk_available_count = 0
 
 
-try:
-    port = int(os.environ.get("DLPROXY_PORT", 9090))
-except ValueError:
-    port = 9090
-
-with ThreadingHTTPServer((os.environ.get("DLPROXY_HOST", "127.0.0.1"), port), RequestHandler) as httpd:
-    host, port = httpd.socket.getsockname()[:2]
-    url_host = f"[{host}]" if ":" in host else host
-    print(
-        f"Serving HTTP on {host} port {port} "
-        f"(http://{url_host}:{port}/) ..."
-    )
+def run():
     try:
-        httpd.serve_forever()
-    except KeyboardInterrupt:
-        print("\nKeyboard interrupt received, exiting.")
+        port = int(os.environ.get("DLPROXY_PORT", 9090))
+    except ValueError:
+        port = 9090
+
+    with ThreadingHTTPServer((os.environ.get("DLPROXY_HOST", "127.0.0.1"), port), RequestHandler) as httpd:
+        host, port = httpd.socket.getsockname()[:2]
+        url_host = f"[{host}]" if ":" in host else host
+        print(
+            f"Serving HTTP on {host} port {port} "
+            f"(http://{url_host}:{port}/) ..."
+        )
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\nKeyboard interrupt received, exiting.")
+
+
+def purge(prefix: str):
+    prepared_prefix = prefix.replace("%", r"\%") + "%"
+    query = "SELECT * FROM files WHERE url LIKE ?"
+    cursor = db.execute(query, (prepared_prefix,))
+    for row in cursor:
+        print(row["file_id"])
+
+        storage_path = STORAGEDIR / row["file_id"]
+        storage_path.unlink(missing_ok=True)
+
+        del_query = "DELETE FROM files WHERE file_id = ?"
+        with db:
+            db.execute(del_query, (row["file_id"],))
+
+
+if len(sys.argv) < 2:
+    print("No mode specified.", file=sys.stderr)
+    sys.exit(1)
+
+mode = sys.argv[1]
+
+if mode == "run":
+    run()
+elif mode == "purge":
+    if len(sys.argv) < 3:
+        print("No prefix specified.", file=sys.stderr)
+        sys.exit(1)
+    purge(sys.argv[2])
+else:
+    print("Unknown mode.", file=sys.stderr)
+    sys.exit(1)
+
 
 db.close()
