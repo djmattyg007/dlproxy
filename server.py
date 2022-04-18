@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see https://www.gnu.org/licenses/.
 
-from hashlib import sha256
+import hashlib
 from http import HTTPStatus
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import logging
@@ -59,9 +59,9 @@ logger.info(f"Using storage path: {STORAGEDIR}")
 
 
 def hashgen(raw_string: str) -> str:
-    hash = sha256()
-    hash.update(raw_string.encode())
-    return hash.hexdigest()
+    sha256 = hashlib.sha256()
+    sha256.update(raw_string.encode())
+    return sha256.hexdigest()
 
 
 def check_lock(lock: Lock) -> bool:
@@ -176,7 +176,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             method = getattr(self, mname)
             method()
-        except socket.timeout as e:
+        except (socket.timeout, TimeoutError) as e:
             # a read or a write timed out.  Discard this connection
             self.log_error("Request timed out: %r", e)
             self.close_connection = True
